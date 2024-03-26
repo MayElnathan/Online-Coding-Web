@@ -1,0 +1,54 @@
+.multipleCodesContainer {
+  /* display: flex; */
+  align-items: center;
+  justify-content: space-between;
+  width: 105%;
+  display: inline;
+}
+
+.codeBlockContainer {
+  width: 580px;
+  height: 378px;
+  background: #f0f0f0;
+  resize: none;
+  position: relative;
+  left: 30%;
+  margin: 20px;
+}
+
+.highlightedCode,
+.textCode {
+  /* font-family: var(--font-family-code); */
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    Liberation Mono, Courier New, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 15px;
+}
+
+.highlightedCode {
+  position: absolute;
+  width: 550px;
+  height: 340px;
+  resize: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  overflow-y: auto;
+}
+
+.textCode {
+  width: 550px;
+  height: 350px;
+  position: absolute;
+  background: transparent;
+  color: transparent;
+  border: none;
+  resize: none;
+  caret-color: black;
+  overflow-y: auto;
+}
+
+pre {
+  margin: 0;
+}

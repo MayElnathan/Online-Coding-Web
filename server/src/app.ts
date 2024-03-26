@@ -17,6 +17,19 @@ const socketServer = new Server(httpServer, {
 });
 console.log(`Client Address : ${process.env.CLIENT_ADDRESS}`);
 
+const codeText = `async function fetchData() {
+  try {
+    const response = await fetch("https://api.example.com/data");
+    if (!response.ok) {
+      throw new Error("Networkkjdbfv response was not ok");
+    }
+    const data = await response.json();
+    console.log(data);
+  } catch (error) {
+    console.error("Fetch error:", error);
+  }
+};`;
+
 // middleware:
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -29,7 +42,9 @@ mongoose
     console.log("MongoDB connection successfully established");
     try {
       app.listen(process.env.APP_PORT, () => {
-        console.log(`Express Server is running on port ${process.env.APP_PORT}`);
+        console.log(
+          `Express Server is running on port ${process.env.APP_PORT}`
+        );
       });
     } catch (error) {
       console.error("Error starting the server:", error);
@@ -71,6 +86,8 @@ app.get("/code/:title", async (req, res) => {
 // Create a new code
 app.post("/code", async (req, res) => {
   try {
+    const newCodeBody = req.body;
+    newCodeBody["solutionCode"] = codeText;
     const newCode = new Code(req.body);
     const savedCode = await newCode.save();
     res.status(201).json(savedCode);
@@ -79,48 +96,68 @@ app.post("/code", async (req, res) => {
   }
 });
 
-// Define a variable to keep track of the number of connections
-let connectedClientsCount = 0;
-let firstClientId = null;
+// Create a new code
+app.post("/code", async (req, res) => {
+  try {
+    const newCodeBody = req.body;
+    newCodeBody["solutionCode"] = codeText;
+    const newCode = new Code(req.body);
+    const savedCode = await newCode.save();
+    res.status(201).json(savedCode);
+  } catch (error) {
+    res.status(400).json({ errorMessage: error.message });
+  }
+});
+
+// Define a variable to keep track of the number of connections in each codeBlock
+// const countConnectionsPerRoom = {
+//   "async": 0,
+//   "closure-case": 0,
+//   "promise-case": 0,
+//   "event-handling": 0,
+// };
+
+
 
 // Socket Server:
 socketServer.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
-  // Increment the count of connected clients
-  connectedClientsCount++;
-
-  // Store the ID of the first client
-  if (connectedClientsCount === 1) {
-    firstClientId = socket.id;
-    console.log(`Mentor Connected with ID: ${firstClientId}`)
-  }
-
-  // Inform the client if it's the first one or not
-  socket.emit("isMentor", {
-    isFirstClient: socket.id === firstClientId,
-  });
-
-  socket.on("joinRoom", (title) => {
+  socket.on("joinRoom", async(title) => {
+    // countConnectionsPerRoom[`${title}`] += 1;
+    // console.log(
+    //   `${countConnectionsPerRoom[`${title}`]} people in room - ${title}`
+    // );
+    const roomSocketList = await socketServer.in(title).fetchSockets();
+    // console.log(roomSocketList)
+    if (roomSocketList.length === 0) {
+      socket.emit("isMentor", true);
+      console.log(`Mentor Connected on room - ${title}`);
+    } else {
+      socket.emit("isMentor", false);
+      console.log(`Student Connected on room - ${title}`);
+    }
     socket.join(title);
   });
 
-  socket.on("sendCode", (data) => {
-    socket.to(data.room).emit("receiveCode", data);
+  // On receiving a change in the student's code, send it to the mentor
+  socket.on("sendStudentCode", ({ code, room }) => {
+    socket.to(room).emit("receiveStudentCode", code);
   });
-});
 
-// Event handler for disconnection
-socketServer.on("disconnect", (socket) => {
-  console.log(`User Disconnected: ${socket.id}`);
+//   socket.on("disconnect-room", (title) => {
+//     // Decrement the count of connected clients in the title room
+//     countConnectionsPerRoom[`${title}`] -= 1;
+//     console.log(
+//       `${countConnectionsPerRoom[`${title}`]} people in room - ${title}`
+//     );
+//     console.log(socket.rooms)
+//   });
 
-  // Decrement the count of connected clients
-  connectedClientsCount--;
-
-  // Update the first client ID if the first client disconnects
-  if (socket.id === firstClientId) {
-    firstClientId = null;
-  }
+  // Event handler for disconnection
+  socket.on("disconnect", () => {
+    console.log(`User Disconnected`);
+  });
 });
 
 httpServer.listen(process.env.SOCKET_PORT, () => {

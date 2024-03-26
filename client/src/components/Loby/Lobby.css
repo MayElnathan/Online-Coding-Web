@@ -1,0 +1,24 @@
+.list-container {
+  list-style: none;
+  padding: 0;
+}
+
+.list-container .link {
+  display: block;
+  width: inherit;
+  text-align: center;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px #ccc;
+  border-radius: 5px;
+  text-decoration: none;
+  color: antiquewhite;
+  font-weight: 800;
+  background-color: rgb(33, 115, 118);
+}
+
+.list-container .link:hover {
+  background-color: #f0f0f0;
+  color: black;
+  font-weight: 800;
+}
