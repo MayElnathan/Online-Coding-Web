@@ -14,6 +14,7 @@
   position: relative;
   left: 30%;
   margin: 20px;
+  box-shadow: 0 0 20px rgba(24, 22, 142, 0.401);
 }
 
 .highlightedCode,
@@ -51,4 +52,37 @@
 
 pre {
   margin: 0;
+}
+
+.codeTitle {
+  position: relative;
+  left: 40%;
+}
+
+.solution,
+.submittedCorrectly {
+  background-color: #ccf6d5;
+}
+
+.submittedIncorrectly {
+  background-color: #f6cccc;
+}
+
+.submissionButton {
+  background-color: #4caf50; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.centeredButtonContainer {
+  display: flex;
+  justify-content: center;
 }

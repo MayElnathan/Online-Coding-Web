@@ -109,27 +109,12 @@ app.post("/code", async (req, res) => {
   }
 });
 
-// Define a variable to keep track of the number of connections in each codeBlock
-// const countConnectionsPerRoom = {
-//   "async": 0,
-//   "closure-case": 0,
-//   "promise-case": 0,
-//   "event-handling": 0,
-// };
-
-
-
 // Socket Server:
 socketServer.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
-  socket.on("joinRoom", async(title) => {
-    // countConnectionsPerRoom[`${title}`] += 1;
-    // console.log(
-    //   `${countConnectionsPerRoom[`${title}`]} people in room - ${title}`
-    // );
+  socket.on("joinRoom", async (title) => {
     const roomSocketList = await socketServer.in(title).fetchSockets();
-    // console.log(roomSocketList)
     if (roomSocketList.length === 0) {
       socket.emit("isMentor", true);
       console.log(`Mentor Connected on room - ${title}`);
@@ -142,17 +127,14 @@ socketServer.on("connection", (socket) => {
 
   // On receiving a change in the student's code, send it to the mentor
   socket.on("sendStudentCode", ({ code, room }) => {
-    socket.to(room).emit("receiveStudentCode", code);
+    socket.to(room).emit("receiveStudentCode", { code, studentId: socket.id });
   });
 
-//   socket.on("disconnect-room", (title) => {
-//     // Decrement the count of connected clients in the title room
-//     countConnectionsPerRoom[`${title}`] -= 1;
-//     console.log(
-//       `${countConnectionsPerRoom[`${title}`]} people in room - ${title}`
-//     );
-//     console.log(socket.rooms)
-//   });
+  // On receiving a change in the student's code, send it to the mentor
+  socket.on("studentSubmission", ({ submissionStatus , room }) => {
+    console.log("studentSubmissionStatus - " , submissionStatus)
+    socket.to(room).emit("studentSubmissionStatus", { submissionStatus, studentId: socket.id });
+  });
 
   // Event handler for disconnection
   socket.on("disconnect", () => {

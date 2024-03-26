@@ -16,9 +16,31 @@ const baseCodeSolution = "// this is the solution!";
 
 hljs.registerLanguage("javascript", javascript);
 
+const highlightedHtmlCode = (code: string) => {
+  return hljs.highlightAuto(code).value;
+};
+
+const normalizeText = (input: string) => {
+  const trimmedText = input.trim();
+  // Replace multiple spaces with a single space
+  const singleSpaceText = trimmedText.replace(/\s{2,}/g, " ");
+  // Replace multiple newline characters with a single newline
+  const singleNewlineText = singleSpaceText.replace(/\n{2,}/g, "\n");
+  return singleNewlineText;
+};
+
 const CodeBlock: React.FC = () => {
   const { codeTitle } = useParams();
   const [codeContent, setCodeContent] = useState<string>(baseCodeInstructions);
+  const [studentSubmissionStatus, setStudentSubmissionStatus] =
+    useState<string>("");
+  //   const [studentsCodeContent, setStudentsCodeContent] = useState<{
+  //     [key: string]: string;
+  //   }>({});
+  const [studentsCodeContent, setStudentsCodeContent] = useState<{
+    [key: string]: { code: string; submission: string };
+  }>({});
+
   const [solutionContent, setSolutionContent] =
     useState<string>(baseCodeSolution);
   const [isMentor, setIsMentor] = useState(false);
@@ -51,15 +73,46 @@ const CodeBlock: React.FC = () => {
       setIsMentor(isMentorResponse);
       console.log(`i am a ${isMentorResponse ? "Mentor" : "Student"}`);
       socketRef.current.off("isMentor"); // Remove the event listener after it's triggered
-    });
 
-    socketRef.current.on("receiveStudentCode", (data: string) => {
-      console.log(data);
-      setCodeContent(data);
+      // only the mentor listen on others students code
+      if (isMentorResponse) {
+        socketRef.current.on(
+          "receiveStudentCode",
+          (data: { code: string; studentId: string }) => {
+            const { code, studentId } = data;
+            setStudentsCodeContent((prevStudentsCodeContent) => ({
+              ...prevStudentsCodeContent,
+              [studentId]: { code: code, submission: "working" }, // Set the default value for submition
+              //   [studentId]: code,
+            }));
+          }
+        );
+
+        socketRef.current.on(
+          "studentSubmissionStatus",
+          (data: { submissionStatus: string; studentId: string }) => {
+            console.log("data on submmition", data);
+            const { submissionStatus, studentId } = data;
+            setStudentsCodeContent((prevStudentsCodeContent) => ({
+              ...prevStudentsCodeContent,
+              [studentId]: {
+                ...prevStudentsCodeContent[studentId],
+                submission: submissionStatus,
+              }, // Set the default value for submition
+              //   [studentId]: code,
+            }));
+
+            console.log(
+              " a student has submitted his code :",
+              submissionStatus
+            );
+          }
+        );
+      }
     });
 
     return () => {
-    //   socketRef.current.emit("disconnect-room", codeTitle);
+      //   socketRef.current.emit("disconnect-room", codeTitle);
       socketRef.current.disconnect(); // Disconnect socket on unmount
     };
   }, []);
@@ -68,38 +121,73 @@ const CodeBlock: React.FC = () => {
     socketRef.current.emit("sendStudentCode", { code, room: codeTitle });
   };
 
+  const handleSubmissionCode = () => {
+    const isGoodSubmission =
+      normalizeText(codeContent) === normalizeText(solutionContent);
+
+    console.log("isGoodSubmission", isGoodSubmission);
+
+    const submissionStatus = isGoodSubmission
+      ? "submittedCorrectly"
+      : "submittedIncorrectly";
+    setStudentSubmissionStatus(submissionStatus);
+    socketRef.current.emit("studentSubmission", {
+      submissionStatus,
+      room: codeTitle,
+    });
+  };
+
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { value } = e.target;
     setCodeContent(value);
     sendMessage(value);
+    setStudentSubmissionStatus("");
   };
 
-  const highlightedHtml = hljs.highlightAuto(codeContent).value;
-  const HighlightedSolutionHtml = hljs.highlightAuto(solutionContent).value;
+  //   const highlightedHtml = hljs.highlightAuto(codeContent).value;
+  //   const HighlightedSolutionHtml = hljs.highlightAuto(solutionContent).value;
 
   return (
     <>
       <div className="multipleCodesContainer">
-        <h1>Student Code:</h1>
-        <div className="codeBlockContainer">
-          <pre className="highlightedCode">
-            <code dangerouslySetInnerHTML={{ __html: highlightedHtml }} />
-          </pre>
-          <textarea
-            className="textCode"
-            value={codeContent}
-            onChange={handleCodeChange}
-            readOnly={isMentor || false}
-          />
-        </div>
+        {!isMentor && (
+          <>
+            <h1 className="codeTitle">Student Code:</h1>
+            <div className={`codeBlockContainer ${studentSubmissionStatus}`}>
+              <pre className="highlightedCode">
+                <code
+                  dangerouslySetInnerHTML={{
+                    __html: highlightedHtmlCode(codeContent),
+                  }}
+                />
+              </pre>
+              <textarea
+                className="textCode"
+                value={codeContent}
+                onChange={handleCodeChange}
+                readOnly={isMentor || false}
+              />
+            </div>
+            <div className="centeredButtonContainer">
+              <button
+                className="submissionButton"
+                onClick={handleSubmissionCode}
+              >
+                Submit
+              </button>
+            </div>
+          </>
+        )}
 
         {isMentor && (
           <>
-            <h1>Solution Code:</h1>
-            <div className="codeBlockContainer">
+            <h1 className="codeTitle">Solution Code:</h1>
+            <div className="codeBlockContainer solution">
               <pre className="highlightedCode">
                 <code
-                  dangerouslySetInnerHTML={{ __html: HighlightedSolutionHtml }}
+                  dangerouslySetInnerHTML={{
+                    __html: highlightedHtmlCode(solutionContent),
+                  }}
                 />
               </pre>
               <textarea
@@ -109,6 +197,26 @@ const CodeBlock: React.FC = () => {
                 readOnly={true}
               />
             </div>
+            {Object.entries(studentsCodeContent).map(([studentId, data]) => (
+              <div key={studentId}>
+                <h1 className="codeTitle">Student Code:</h1>
+                <div className={`codeBlockContainer ${data.submission}`}>
+                  <pre className="highlightedCode">
+                    <code
+                      dangerouslySetInnerHTML={{
+                        __html: highlightedHtmlCode(data.code),
+                      }}
+                    />
+                  </pre>
+                  <textarea
+                    className="textCode"
+                    value={data.code}
+                    // onChange={handleCodeChange}
+                    readOnly={isMentor || true}
+                  />
+                </div>
+              </div>
+            ))}
           </>
         )}
       </div>
