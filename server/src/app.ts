@@ -11,16 +11,15 @@ const app = express();
 const httpServer = createServer(app);
 const socketServer = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_ADDRESS,
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
-console.log(`Client Address : ${process.env.CLIENT_ADDRESS}`);
 
 // middleware:
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: process.env.CLIENT_ADDRESS }));
+app.use(cors());
 
 // mongodb and app connection:
 mongoose
