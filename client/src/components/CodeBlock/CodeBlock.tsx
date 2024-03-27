@@ -13,6 +13,7 @@ axios.defaults.baseURL = APP_ADDRESS;
 
 const baseCodeInstructions = "// add your code here";
 const baseCodeSolution = "// this is the solution!";
+const newStudentEntered = "// A new student entered this room!"
 
 hljs.registerLanguage("javascript", javascript);
 
@@ -30,35 +31,30 @@ const normalizeText = (input: string) => {
 };
 
 const CodeBlock: React.FC = () => {
+
   const { codeTitle } = useParams();
+  const [isMentor, setIsMentor] = useState(false);
+  const socketRef = useRef<any>(null);
+
+  // student states:
   const [codeContent, setCodeContent] = useState<string>(baseCodeInstructions);
-  const [studentSubmissionStatus, setStudentSubmissionStatus] =
-    useState<string>("");
-  //   const [studentsCodeContent, setStudentsCodeContent] = useState<{
-  //     [key: string]: string;
-  //   }>({});
+  const [studentSubmissionStatus, setStudentSubmissionStatus] = useState<string>("");
+
+  //mentor states:
   const [studentsCodeContent, setStudentsCodeContent] = useState<{
     [key: string]: { code: string; submission: string };
   }>({});
+  const [solutionContent, setSolutionContent] = useState<string>(baseCodeSolution);
 
-  const [solutionContent, setSolutionContent] =
-    useState<string>(baseCodeSolution);
-  const [isMentor, setIsMentor] = useState(false);
-
-  const socketRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchSolution = async (codeTitle: string) => {
       try {
-        console.log("codeTitle", codeTitle);
         const response = await axios.get(`/code/${codeTitle}`);
-        console.log(response);
-        const soulutionCode = response.data.solutionCode;
-        const initCode = response.data.initCode;
-        setSolutionContent(soulutionCode);
+        const {solutionCode , initCode} = response.data;
+        // socketRef.current.emit("joinRoom", {codeTitle , initCode});
+        setSolutionContent(solutionCode);
         setCodeContent(initCode);
-        console.log("soulutionCode: ", soulutionCode);
-        console.log("initCode: ", initCode);
       } catch (error) {
         console.error("Error:", error);
       }
@@ -67,7 +63,7 @@ const CodeBlock: React.FC = () => {
     fetchSolution(codeTitle as string);
     socketRef.current = io(SOCKET_ADDRESS);
 
-    socketRef.current.emit("joinRoom", codeTitle);
+    socketRef.current.emit("joinRoom", codeTitle );
 
     socketRef.current.on("isMentor", (isMentorResponse: boolean) => {
       setIsMentor(isMentorResponse);
@@ -82,8 +78,7 @@ const CodeBlock: React.FC = () => {
             const { code, studentId } = data;
             setStudentsCodeContent((prevStudentsCodeContent) => ({
               ...prevStudentsCodeContent,
-              [studentId]: { code: code, submission: "working" }, // Set the default value for submition
-              //   [studentId]: code,
+              [studentId]: { code: code, submission: "" },
             }));
           }
         );
@@ -91,28 +86,38 @@ const CodeBlock: React.FC = () => {
         socketRef.current.on(
           "studentSubmissionStatus",
           (data: { submissionStatus: string; studentId: string }) => {
-            console.log("data on submmition", data);
             const { submissionStatus, studentId } = data;
             setStudentsCodeContent((prevStudentsCodeContent) => ({
               ...prevStudentsCodeContent,
               [studentId]: {
                 ...prevStudentsCodeContent[studentId],
                 submission: submissionStatus,
-              }, // Set the default value for submition
-              //   [studentId]: code,
+              },
             }));
-
-            console.log(
-              " a student has submitted his code :",
-              submissionStatus
-            );
           }
         );
+
+        socketRef.current.on("studentEnterCodeBlock", (studentId: string ) => {
+          setStudentsCodeContent((prevStudentsCodeContent) => ({
+            ...prevStudentsCodeContent,
+            [studentId]: { code: newStudentEntered, submission: "" },
+          }));
+        });
+
+        socketRef.current.on("studentLeftRoom", (studentId: string) => {
+          setStudentsCodeContent((prevStudentsCodeContent) => {
+            const { [studentId]: _, ...rest } = prevStudentsCodeContent;
+            return rest;
+          });
+        });
       }
     });
 
     return () => {
-      //   socketRef.current.emit("disconnect-room", codeTitle);
+      if (!isMentor) {
+        socketRef.current
+          .emit("studentLeftCodeBlock", { room: codeTitle, studentId: socketRef.current.id });
+      }
       socketRef.current.disconnect(); // Disconnect socket on unmount
     };
   }, []);
@@ -124,8 +129,6 @@ const CodeBlock: React.FC = () => {
   const handleSubmissionCode = () => {
     const isGoodSubmission =
       normalizeText(codeContent) === normalizeText(solutionContent);
-
-    console.log("isGoodSubmission", isGoodSubmission);
 
     const submissionStatus = isGoodSubmission
       ? "submittedCorrectly"
@@ -143,9 +146,6 @@ const CodeBlock: React.FC = () => {
     sendMessage(value);
     setStudentSubmissionStatus("");
   };
-
-  //   const highlightedHtml = hljs.highlightAuto(codeContent).value;
-  //   const HighlightedSolutionHtml = hljs.highlightAuto(solutionContent).value;
 
   return (
     <>
@@ -211,7 +211,6 @@ const CodeBlock: React.FC = () => {
                   <textarea
                     className="textCode"
                     value={data.code}
-                    // onChange={handleCodeChange}
                     readOnly={isMentor || true}
                   />
                 </div>

@@ -114,15 +114,18 @@ socketServer.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
   socket.on("joinRoom", async (title) => {
-    const roomSocketList = await socketServer.in(title).fetchSockets();
-    if (roomSocketList.length === 0) {
+    // const roomSocketList = await socketServer.in(title).fetchSockets();
+    const socketsList = await socketServer.in(title).allSockets();
+    if (socketsList.size === 0) {
       socket.emit("isMentor", true);
       console.log(`Mentor Connected on room - ${title}`);
     } else {
       socket.emit("isMentor", false);
       console.log(`Student Connected on room - ${title}`);
+      socket.to(title).emit("studentEnterCodeBlock" , socket.id);
     }
     socket.join(title);
+    console.log("socketsList" , socketsList)
   });
 
   // On receiving a change in the student's code, send it to the mentor
@@ -130,10 +133,14 @@ socketServer.on("connection", (socket) => {
     socket.to(room).emit("receiveStudentCode", { code, studentId: socket.id });
   });
 
-  // On receiving a change in the student's code, send it to the mentor
+  // On receiving student's submission , send it's status to the mentor
   socket.on("studentSubmission", ({ submissionStatus , room }) => {
-    console.log("studentSubmissionStatus - " , submissionStatus)
     socket.to(room).emit("studentSubmissionStatus", { submissionStatus, studentId: socket.id });
+  });
+
+  // On receiving a student left the room, send his id to the mentor
+  socket.on("studentLeftCodeBlock", ({ room , studentId }) => {
+    socket.to(room).emit("studentLeftRoom", studentId);
   });
 
   // Event handler for disconnection
