@@ -5,7 +5,8 @@ import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
 import "./CodeBlock.css";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import Emoji from "../Emoji/Emoji";
 
 const SOCKET_ADDRESS = import.meta.env.VITE_SOCKET_ADDRESS;
 const APP_ADDRESS = import.meta.env.VITE_APP_ADDRESS;
@@ -13,7 +14,7 @@ axios.defaults.baseURL = APP_ADDRESS;
 
 const baseCodeInstructions = "// add your code here";
 const baseCodeSolution = "// this is the solution!";
-const newStudentEntered = "// A new student entered this room!"
+const newStudentEntered = "// A new student entered this room!";
 
 hljs.registerLanguage("javascript", javascript);
 
@@ -23,36 +24,38 @@ const highlightedHtmlCode = (code: string) => {
 
 const normalizeText = (input: string) => {
   const trimmedText = input.trim();
-  // Replace multiple spaces with a single space
   const singleSpaceText = trimmedText.replace(/\s{2,}/g, " ");
-  // Replace multiple newline characters with a single newline
   const singleNewlineText = singleSpaceText.replace(/\n{2,}/g, "\n");
   return singleNewlineText;
 };
 
 const CodeBlock: React.FC = () => {
-
+  const navigate = useNavigate();
   const { codeTitle } = useParams();
   const [isMentor, setIsMentor] = useState(false);
   const socketRef = useRef<any>(null);
 
   // student states:
   const [codeContent, setCodeContent] = useState<string>(baseCodeInstructions);
-  const [studentSubmissionStatus, setStudentSubmissionStatus] = useState<string>("");
+  const [studentSubmissionStatus, setStudentSubmissionStatus] =
+    useState<string>("");
 
   //mentor states:
   const [studentsCodeContent, setStudentsCodeContent] = useState<{
     [key: string]: { code: string; submission: string };
   }>({});
-  const [solutionContent, setSolutionContent] = useState<string>(baseCodeSolution);
+  const [solutionContent, setSolutionContent] =
+    useState<string>(baseCodeSolution);
 
+  const handleGoBackToLobby = () => {
+    navigate("/");
+  };
 
   useEffect(() => {
     const fetchSolution = async (codeTitle: string) => {
       try {
         const response = await axios.get(`/code/${codeTitle}`);
-        const {solutionCode , initCode} = response.data;
-        // socketRef.current.emit("joinRoom", {codeTitle , initCode});
+        const { solutionCode, initCode } = response.data;
         setSolutionContent(solutionCode);
         setCodeContent(initCode);
       } catch (error) {
@@ -63,7 +66,7 @@ const CodeBlock: React.FC = () => {
     fetchSolution(codeTitle as string);
     socketRef.current = io(SOCKET_ADDRESS);
 
-    socketRef.current.emit("joinRoom", codeTitle );
+    socketRef.current.emit("joinRoom", codeTitle);
 
     socketRef.current.on("isMentor", (isMentorResponse: boolean) => {
       setIsMentor(isMentorResponse);
@@ -97,7 +100,7 @@ const CodeBlock: React.FC = () => {
           }
         );
 
-        socketRef.current.on("studentEnterCodeBlock", (studentId: string ) => {
+        socketRef.current.on("studentEnterCodeBlock", (studentId: string) => {
           setStudentsCodeContent((prevStudentsCodeContent) => ({
             ...prevStudentsCodeContent,
             [studentId]: { code: newStudentEntered, submission: "" },
@@ -110,14 +113,38 @@ const CodeBlock: React.FC = () => {
             return rest;
           });
         });
+
+        //   }else{
+        //     socketRef.current.on("disconnect", () => {
+        //         // if (isMentor) {
+        //         //   handleGoBackToLobby();
+        //         // } else {
+        //           alert("The mentor has left the room!");
+        //           handleGoBackToLobby();
+        //         // }
+        //       });
       }
     });
 
+    // socketRef.current.on("disconnect", () => {
+    //   if (isMentor) {
+    //     handleGoBackToLobby();
+    //   } else {
+    //     alert("The mentor has left the room!");
+    //     handleGoBackToLobby();
+    //   }
+    // });
+
     return () => {
       if (!isMentor) {
-        socketRef.current
-          .emit("studentLeftCodeBlock", { room: codeTitle, studentId: socketRef.current.id });
+        socketRef.current.emit("studentLeftCodeBlock", {
+          room: codeTitle,
+          studentId: socketRef.current.id,
+        });
       }
+      //   else {
+      //     socketRef.current.emit("mentorLeftCodeBlock", codeTitle);
+      //   }
       socketRef.current.disconnect(); // Disconnect socket on unmount
     };
   }, []);
@@ -150,9 +177,15 @@ const CodeBlock: React.FC = () => {
   return (
     <>
       <div className="multipleCodesContainer">
+        <div className="titleHeaders">
+          <h1 className="greeting">Hello {isMentor ? "Mentor" : "Student"},</h1>
+          <button className="backToLobby" onClick={handleGoBackToLobby}>
+            back to lobby
+          </button>
+        </div>
         {!isMentor && (
           <>
-            <h1 className="codeTitle">Student Code:</h1>
+            <h1 className="codeTitle">{codeTitle} Code:</h1>
             <div className={`codeBlockContainer ${studentSubmissionStatus}`}>
               <pre className="highlightedCode">
                 <code
@@ -168,6 +201,7 @@ const CodeBlock: React.FC = () => {
                 readOnly={isMentor || false}
               />
             </div>
+            <Emoji submissionStatus={studentSubmissionStatus}></Emoji>
             <div className="centeredButtonContainer">
               <button
                 className="submissionButton"
@@ -181,7 +215,7 @@ const CodeBlock: React.FC = () => {
 
         {isMentor && (
           <>
-            <h1 className="codeTitle">Solution Code:</h1>
+            <h1 className="codeTitle">{codeTitle} Solution:</h1>
             <div className="codeBlockContainer solution">
               <pre className="highlightedCode">
                 <code
@@ -197,6 +231,7 @@ const CodeBlock: React.FC = () => {
                 readOnly={true}
               />
             </div>
+            <hr className="divider"></hr>
             {Object.entries(studentsCodeContent).map(([studentId, data]) => (
               <div key={studentId}>
                 <h1 className="codeTitle">Student Code:</h1>

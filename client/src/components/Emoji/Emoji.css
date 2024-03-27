@@ -1,0 +1,9 @@
+.emoji-container {
+    display: flex;
+    justify-content: center;
+}
+
+.image {
+    height: 300px;
+    width: 300px; 
+}

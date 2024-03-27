@@ -1,4 +1,3 @@
-import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Lobby from "./components/Loby/Lobby";
 import CodeBlock from "./components/CodeBlock/CodeBlock";

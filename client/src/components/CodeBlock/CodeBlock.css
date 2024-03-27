@@ -2,18 +2,19 @@
   /* display: flex; */
   align-items: center;
   justify-content: space-between;
+  justify-content: center;
   width: 105%;
   display: inline;
 }
 
 .codeBlockContainer {
   width: 580px;
-  height: 378px;
+  height: 570px;
   background: #f0f0f0;
   resize: none;
-  position: relative;
-  left: 30%;
-  margin: 20px;
+  margin: auto;
+  margin-bottom: 20px;
+  margin-top: 20px;
   box-shadow: 0 0 20px rgba(24, 22, 142, 0.401);
 }
 
@@ -30,7 +31,7 @@
 .highlightedCode {
   position: absolute;
   width: 550px;
-  height: 340px;
+  height: 530px;
   resize: none;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -40,7 +41,7 @@
 
 .textCode {
   width: 550px;
-  height: 350px;
+  height: 540px;
   position: absolute;
   background: transparent;
   color: transparent;
@@ -55,8 +56,13 @@ pre {
 }
 
 .codeTitle {
-  position: relative;
-  left: 40%;
+  /* position: relative;
+  left: 40%; */
+  display: flex;
+  justify-content: center;
+  margin: auto;
+  margin-top: 20px;
+  color: rgb(33, 115, 118);
 }
 
 .solution,
@@ -69,20 +75,63 @@ pre {
 }
 
 .submissionButton {
-  background-color: #4caf50; /* Green */
+  background-color: cadetblue;
   border: none;
   color: white;
   padding: 15px 32px;
   text-align: center;
-  text-decoration: none;
   display: inline-block;
   font-size: 16px;
   margin: 4px 2px;
   cursor: pointer;
   border-radius: 10px;
+  font-weight: 800;
+}
+
+.submissionButton:hover {
+  background-color: rgb(33, 115, 118);
 }
 
 .centeredButtonContainer {
   display: flex;
   justify-content: center;
+}
+
+.greeting {
+  color: rgb(33, 115, 118);
+}
+
+.divider {
+  margin-top: 30px;
+  border-top: 3px solid #bbb;
+  width: 650px;
+}
+
+/*  */
+
+.titleHeaders {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  width: 70%;
+  margin: auto;
+}
+
+.backToLobby {
+  display: block;
+  text-align: center;
+  padding: 15px 20px;
+  border: 1px #ccc;
+  border-radius: 10px;
+  color: antiquewhite;
+  font-weight: 800;
+  font-size: medium;
+  background-color: rgb(33, 115, 118);
+}
+
+.backToLobby:hover {
+  background-color: cadetblue;
+  color: antiquewhite;
+  font-weight: 800;
 }
