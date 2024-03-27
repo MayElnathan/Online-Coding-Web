@@ -17,52 +17,6 @@ const socketServer = new Server(httpServer, {
 });
 console.log(`Client Address : ${process.env.CLIENT_ADDRESS}`);
 
-const codeText = `const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
-
-io.on('connection', (socket) => {
-  console.log('A client connected');
-
-  // Handle custom events
-  socket.on('chatMessage', (message) => {
-    console.log('Received message:', message);
-    // Broadcast the message to all clients
-    io.emit('chatMessage', message);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('A client disconnected');
-  });
-});
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log("Server is listening");
-});
-`
-
-const initCode = `// Establish a connection with Socket.IO on the Server side and emit events`;
-
-const title = "Socket.IO - Server Side";
-
-// const codeText = `async function fetchData() {
-//   try {
-//     const response = await fetch("https://api.example.com/data");
-//     if (!response.ok) {
-//       throw new Error("Networkkjdbfv response was not ok");
-//     }
-//     const data = await response.json();
-//     console.log(data);
-//   } catch (error) {
-//     console.error("Fetch error:", error);
-//   }
-// };`;
-
 // middleware:
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -116,34 +70,6 @@ app.get("/code/:title", async (req, res) => {
   }
 });
 
-// Create a new code
-app.post("/code", async (req, res) => {
-  try {
-    const newCodeBody = req.body;
-    newCodeBody["solutionCode"] = codeText;
-    newCodeBody["initCode"] = initCode;
-    newCodeBody["title"] = title;
-    const newCode = new Code(req.body);
-    const savedCode = await newCode.save();
-    res.status(201).json(savedCode);
-  } catch (error) {
-    res.status(400).json({ errorMessage: error.message });
-  }
-});
-
-// // Create a new code
-// app.post("/code", async (req, res) => {
-//   try {
-//     const newCodeBody = req.body;
-//     newCodeBody["solutionCode"] = codeText;
-//     const newCode = new Code(req.body);
-//     const savedCode = await newCode.save();
-//     res.status(201).json(savedCode);
-//   } catch (error) {
-//     res.status(400).json({ errorMessage: error.message });
-//   }
-// });
-
 // Socket Server:
 socketServer.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
@@ -183,11 +109,6 @@ socketServer.on("connection", (socket) => {
     console.log("studentLeftCodeBlock.....");
     socket.to(room).emit("studentLeftRoom", studentId);
   });
-
-  //   // When mentor leave the room, inform all students
-  //   socket.on("mentorLeftCodeBlock", ( room ) => {
-  //     socket.in(room).disconnectSockets(true);
-  //   });
 
   // Event handler for disconnection
   socket.on("disconnect", () => {
