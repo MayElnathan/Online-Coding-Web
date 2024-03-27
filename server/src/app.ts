@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import Code from "./models/codeModel";
 
 const app = express();
+app.use(cors({origin:"*"}));
 const httpServer = createServer(app);
 const socketServer = new Server(httpServer, {
   cors: {
@@ -20,7 +21,6 @@ const socketServer = new Server(httpServer, {
 // middleware:
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
 
 // mongodb and app connection:
 mongoose
