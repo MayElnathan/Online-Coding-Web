@@ -64,21 +64,12 @@ const CodeBlock: React.FC = () => {
     };
 
     fetchSolution(codeTitle as string);
-    // socketRef.current = io(`216.24.57.4:8080`, {
-    //     withCredentials: true,
-    //     extraHeaders: {
-    //       "Access Control Allow Origin": "sad",
-    //     },
-    //   });
 
-    socketRef.current = io(SOCKET_ADDRESS
-    //     , {
-    //   withCredentials: true,
-    //   extraHeaders: {
-    //     "Access-Control-Allow-Origin": "fghfhg.com",
-    //   },
-    // }
-    );
+    socketRef.current = io(SOCKET_ADDRESS, {
+      extraHeaders: {
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
 
     socketRef.current.emit("joinRoom", codeTitle);
 
