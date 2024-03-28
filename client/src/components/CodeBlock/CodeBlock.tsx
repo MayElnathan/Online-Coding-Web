@@ -4,35 +4,39 @@ import "highlight.js/styles/base16/atelier-dune-light.min.css";
 import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
 import "./CodeBlock.css";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import Emoji from "../Emoji/Emoji";
 
-const SOCKET_ADDRESS = import.meta.env.VITE_SOCKET_ADDRESS;
-const APP_ADDRESS = import.meta.env.VITE_APP_ADDRESS;
+const SOCKET_ADDRESS: string = import.meta.env.VITE_SOCKET_ADDRESS as string;
+const APP_ADDRESS: string = import.meta.env.VITE_APP_ADDRESS as string;
 axios.defaults.baseURL = APP_ADDRESS;
 
-const baseCodeInstructions = "// add your code here";
-const baseCodeSolution = "// this is the solution!";
-const newStudentEntered = "// A new student entered this room!";
+const baseCodeInstructions: string = "// add your code here";
+const baseCodeSolution: string = "// this is the solution!";
+const newStudentEntered: string = "// A new student entered this room!";
 
 hljs.registerLanguage("javascript", javascript);
 
-const highlightedHtmlCode = (code: string) => {
+const highlightedHtmlCode = (code: string): string => {
   return hljs.highlightAuto(code).value;
 };
 
-const normalizeText = (input: string) => {
-  const trimmedText = input.trim();
-  const singleSpaceText = trimmedText.replace(/\s{2,}/g, " ");
-  const singleNewlineText = singleSpaceText.replace(/\n{2,}/g, "\n");
+const normalizeText = (input: string): string => {
+  const trimmedText: string = input.trim();
+  const singleSpaceText: string = trimmedText.replace(/\s{2,}/g, " ");
+  const singleNewlineText: string = singleSpaceText.replace(/\n{2,}/g, "\n");
   return singleNewlineText;
 };
+
+interface StudentsCodeContent {
+  [key: string]: { code: string; submission: string };
+}
 
 const CodeBlock: React.FC = () => {
   const navigate = useNavigate();
   const { codeTitle } = useParams();
-  const [isMentor, setIsMentor] = useState(false);
+  const [isMentor, setIsMentor] = useState<boolean | null>(null);
   const socketRef = useRef<any>(null);
 
   // student states:
@@ -41,20 +45,17 @@ const CodeBlock: React.FC = () => {
     useState<string>("");
 
   //mentor states:
-  const [studentsCodeContent, setStudentsCodeContent] = useState<{
-    [key: string]: { code: string; submission: string };
-  }>({});
-  const [solutionContent, setSolutionContent] =
-    useState<string>(baseCodeSolution);
+  const [studentsCodeContent, setStudentsCodeContent] = useState<StudentsCodeContent>({});
+  const [solutionContent, setSolutionContent] = useState<string>(baseCodeSolution);
 
   const handleGoBackToLobby = () => {
     navigate("/");
   };
 
   useEffect(() => {
-    const fetchSolution = async (codeTitle: string) => {
+    const fetchSolution = async (codeTitle: string): Promise<void> => {
       try {
-        const response = await axios.get(`/code/${codeTitle}`);
+        const response: AxiosResponse = await axios.get(`/code/${codeTitle}`);
         const { solutionCode, initCode } = response.data;
         setSolutionContent(solutionCode);
         setCodeContent(initCode);
@@ -76,7 +77,7 @@ const CodeBlock: React.FC = () => {
     socketRef.current.on("isMentor", (isMentorResponse: boolean) => {
       setIsMentor(isMentorResponse);
       console.log(`i am a ${isMentorResponse ? "Mentor" : "Student"}`);
-      socketRef.current.off("isMentor"); // Remove the event listener after it's triggered
+      socketRef.current.off("isMentor");
 
       // only the mentor listen on others students code
       if (isMentorResponse) {
@@ -118,27 +119,8 @@ const CodeBlock: React.FC = () => {
             return rest;
           });
         });
-
-        //   }else{
-        //     socketRef.current.on("disconnect", () => {
-        //         // if (isMentor) {
-        //         //   handleGoBackToLobby();
-        //         // } else {
-        //           alert("The mentor has left the room!");
-        //           handleGoBackToLobby();
-        //         // }
-        //       });
       }
     });
-
-    // socketRef.current.on("disconnect", () => {
-    //   if (isMentor) {
-    //     handleGoBackToLobby();
-    //   } else {
-    //     alert("The mentor has left the room!");
-    //     handleGoBackToLobby();
-    //   }
-    // });
 
     return () => {
       if (!isMentor) {
@@ -147,22 +129,20 @@ const CodeBlock: React.FC = () => {
           studentId: socketRef.current.id,
         });
       }
-      //   else {
-      //     socketRef.current.emit("mentorLeftCodeBlock", codeTitle);
-      //   }
-      socketRef.current.disconnect(); // Disconnect socket on unmount
+      // Disconnect socket on unmount
+      socketRef.current.disconnect();
     };
   }, []);
 
-  const sendMessage = (code: string) => {
+  const sendMessage = (code: string): void => {
     socketRef.current.emit("sendStudentCode", { code, room: codeTitle });
   };
 
   const handleSubmissionCode = () => {
-    const isGoodSubmission =
+    const isGoodSubmission: boolean =
       normalizeText(codeContent) === normalizeText(solutionContent);
 
-    const submissionStatus = isGoodSubmission
+    const submissionStatus: string = isGoodSubmission
       ? "submittedCorrectly"
       : "submittedIncorrectly";
     setStudentSubmissionStatus(submissionStatus);
@@ -183,14 +163,18 @@ const CodeBlock: React.FC = () => {
     <>
       <div className="multipleCodesContainer">
         <div className="titleHeaders">
-          <h1 className="greeting">Hello {isMentor ? "Mentor" : "Student"},</h1>
+          <h1 className="greeting">
+            Hello {isMentor !== null && (isMentor ? "Mentor" : "Student")},
+          </h1>
           <button className="backToLobby" onClick={handleGoBackToLobby}>
             back to lobby
           </button>
         </div>
         {!isMentor && (
+          // rendering the student code block
           <>
             <h1 className="codeTitle">{codeTitle} Code:</h1>
+            <Emoji submissionStatus={studentSubmissionStatus}></Emoji>
             <div className={`codeBlockContainer ${studentSubmissionStatus}`}>
               <pre className="highlightedCode">
                 <code
@@ -203,22 +187,25 @@ const CodeBlock: React.FC = () => {
                 className="textCode"
                 value={codeContent}
                 onChange={handleCodeChange}
-                readOnly={isMentor || false}
+                readOnly={false}
               />
             </div>
-            <Emoji submissionStatus={studentSubmissionStatus}></Emoji>
-            <div className="centeredButtonContainer">
-              <button
-                className="submissionButton"
-                onClick={handleSubmissionCode}
-              >
-                Submit
-              </button>
-            </div>
+            {/* <Emoji submissionStatus={studentSubmissionStatus}></Emoji> */}
+            {isMentor !== null && (
+              <div className="centeredButtonContainer">
+                <button
+                  className="submissionButton"
+                  onClick={handleSubmissionCode}
+                >
+                  Submit
+                </button>
+              </div>
+            )}
           </>
         )}
 
         {isMentor && (
+          // rendering the mentor code block
           <>
             <h1 className="codeTitle">{codeTitle} Solution:</h1>
             <div className="codeBlockContainer solution">
@@ -251,7 +238,7 @@ const CodeBlock: React.FC = () => {
                   <textarea
                     className="textCode"
                     value={data.code}
-                    readOnly={isMentor || true}
+                    readOnly={true}
                   />
                 </div>
               </div>

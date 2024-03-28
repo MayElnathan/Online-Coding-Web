@@ -1,5 +1,4 @@
 .multipleCodesContainer {
-  /* display: flex; */
   align-items: center;
   justify-content: space-between;
   justify-content: center;
@@ -10,19 +9,18 @@
 .codeBlockContainer {
   width: 580px;
   height: 570px;
-  background: #f0f0f0;
+  background: var(--background-color-light-code-screen);
   resize: none;
   margin: auto;
   margin-bottom: 20px;
   margin-top: 20px;
-  box-shadow: 0 0 20px rgba(24, 22, 142, 0.401);
+  box-shadow: 0 0 20px var(--box-shadow-color);
 }
 
 .highlightedCode,
 .textCode {
   /* font-family: var(--font-family-code); */
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    Liberation Mono, Courier New, monospace;
+  font-family: var(--font-family-code);
   font-size: 14px;
   line-height: 1.5;
   padding: 15px;
@@ -62,20 +60,20 @@ pre {
   justify-content: center;
   margin: auto;
   margin-top: 20px;
-  color: rgb(33, 115, 118);
+  color: var(--dark-background-color-dark);
 }
 
 .solution,
 .submittedCorrectly {
-  background-color: #ccf6d5;
+  background-color: var(--background-color-light-green);
 }
 
 .submittedIncorrectly {
-  background-color: #f6cccc;
+  background-color: var(--background-color-light-red);
 }
 
 .submissionButton {
-  background-color: cadetblue;
+  background-color: var(--light-background-color-light);
   border: none;
   color: white;
   padding: 15px 32px;
@@ -89,7 +87,7 @@ pre {
 }
 
 .submissionButton:hover {
-  background-color: rgb(33, 115, 118);
+  background-color: var(--dark-background-color-dark);
 }
 
 .centeredButtonContainer {
@@ -98,16 +96,14 @@ pre {
 }
 
 .greeting {
-  color: rgb(33, 115, 118);
+  color: var(--dark-background-color-dark);
 }
 
 .divider {
   margin-top: 30px;
-  border-top: 3px solid #bbb;
+  border-top: 3px solid var(--color-divider-border);
   width: 650px;
 }
-
-/*  */
 
 .titleHeaders {
   display: flex;
@@ -122,16 +118,16 @@ pre {
   display: block;
   text-align: center;
   padding: 15px 20px;
-  border: 1px #ccc;
+  border: 1px var(--color-light-border);
   border-radius: 10px;
-  color: antiquewhite;
+  color: var(--color-light-text);
   font-weight: 800;
   font-size: medium;
-  background-color: rgb(33, 115, 118);
+  background-color: var(--dark-background-color-dark);
 }
 
 .backToLobby:hover {
-  background-color: cadetblue;
-  color: antiquewhite;
+  background-color: var(--light-background-color-light);
+  color: var(--color-light-text);
   font-weight: 800;
 }

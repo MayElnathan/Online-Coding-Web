@@ -1,26 +1,23 @@
 
-
-@import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
-
 :root {
-  --font-family-code: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
-  --font-family-content: "Inter", sans-serif;
-
-
-  --light-background-color: cadetblue;
-  --dark-background-color: rgb(33, 115, 118);
-  --light-red-background-color: rgb(33, 115, 118);
-  --light-green-background-color: rgb(33, 115, 118);
-  --light-code-screen-background-color: rgb(33, 115, 118);
-  --body-background-color: bisque;
-
-
+  --light-background-color-light: cadetblue;
+  --dark-background-color-dark: rgb(33, 115, 118);
+  --background-color-light-red: #f6cccc;
+  --background-color-light-green: #ccf6d5;
+  --color-light-text: antiquewhite;
+  --color-light-border: #ccc;
+  --color-divider-border: #bbb;
+  --box-shadow-color: rgba(24, 22, 142, 0.401);
+  --background-color-body: bisque;
+  --background-color-light-code-screen: #f0f0f0;
+  --font-family-code: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+  Liberation Mono, Courier New, monospace;
+  --font-family-lobby: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
 body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  background-color: var(--body-background-color);  
+  background-color: var(--background-color-body);
 }

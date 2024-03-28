@@ -7,7 +7,7 @@
   transform: translate(-50%, -50%);
   padding: 20px 50px;
   text-align: center;
-  background-color: cadetblue;
-  color: antiquewhite;
+  background-color: var(--light-background-color-light);
+  color: var(--color-light-text);
   width: 30%;
 }

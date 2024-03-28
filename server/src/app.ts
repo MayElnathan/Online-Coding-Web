@@ -8,7 +8,12 @@ import mongoose from "mongoose";
 import Code from "./models/codeModel";
 
 const app = express();
+
+// middleware:
 app.use(cors({origin:"*"}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 const httpServer = createServer(app);
 const socketServer = new Server(httpServer, {
   cors: {
@@ -17,10 +22,6 @@ const socketServer = new Server(httpServer, {
     credentials: true,
   },
 });
-
-// middleware:
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // mongodb and app connection:
 mongoose
@@ -74,8 +75,8 @@ app.get("/code/:title", async (req, res) => {
 socketServer.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
+  // On choosing a code-block you join it's room
   socket.on("joinRoom", async (title) => {
-    // const roomSocketList = await socketServer.in(title).fetchSockets();
     const socketsList = await socketServer.in(title).allSockets();
     if (socketsList.size === 0) {
       socket.emit("isMentor", true);
@@ -86,7 +87,6 @@ socketServer.on("connection", (socket) => {
       socket.to(title).emit("studentEnterCodeBlock", socket.id);
     }
     socket.join(title);
-    console.log("socketsList", socketsList);
   });
 
   // On receiving a change in the student's code, send it to the mentor
